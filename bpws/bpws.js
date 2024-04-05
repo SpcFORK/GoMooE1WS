@@ -28,12 +28,10 @@ const codeToIIFE = (code = "{}", _ = "") => functionToIIFE("_ => " + code, _);
 // @Web
 
 function w_JSHTMLUnpack(encodedHTML) {
-  const 
-    b = document.body,
-
+  const b = document.body,
     e = document.createElement("div"),
-    str = GoMooE1.decode(encodedHTML).decodedString
-  
+    str = GoMooE1.decode(encodedHTML).decodedString;
+
   e.innerHTML = str;
   console.log(str);
   window.w_JSHTMLUnpack = e;
@@ -50,11 +48,9 @@ function makeDocument(head = "", body = "") {
 }
 
 function sendBP_HTML(res, html) {
-  const compHTML = bp.encode(html);
-
-  const unpacker = functionToIIFE(w_JSHTMLUnpack, `'${compHTML.encodedString}'`);
-
-  const dom = makeDocument(`<script>${BP_HOOKIN(unpacker)}</script>`);
+  const compHTML = bp.encode(html),
+    unpacker = functionToIIFE(w_JSHTMLUnpack, `'${compHTML.encodedString}'`),
+    dom = makeDocument(`<script>${BP_HOOKIN(unpacker)}</script>`);
 
   return res.send(dom.serialize());
 }
