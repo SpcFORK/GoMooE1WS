@@ -67,15 +67,15 @@ function makeDocument(head = "", body = "") {
 }
 
 function sendBP_HTML(res, html, ...functionScripts) {
-  const compHTML = bp.encode(html),
-    unpacker = functionToIIFE(w_JSHTMLUnpack, `'${compHTML.encodedString}'`),
-    allScripts = functionScripts
+  const allScripts = functionScripts
       .map(
         (s) =>
           `\n<script>${typeof s === "string" ? s : functionToIIFE(s)}</script>`,
       )
       .join(""),
-    dom = makeDocument(`<script>${BP_HOOKIN(unpacker)}</script>` + allScripts);
+    compHTML = bp.encode(allScripts + "\n\n" + html),
+    unpacker = functionToIIFE(w_JSHTMLUnpack, `'${compHTML.encodedString}'`),
+    dom = makeDocument(`<script>${BP_HOOKIN(unpacker1)}</script>` + allScripts);
 
   return res.send(dom.serialize());
 }
