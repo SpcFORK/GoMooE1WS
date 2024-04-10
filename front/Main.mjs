@@ -1,3 +1,5 @@
-export function Main() {
-  console.log(1)
+function Main() {
+  console.log(2)
 }
+
+Main();
