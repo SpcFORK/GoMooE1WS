@@ -75,7 +75,7 @@ function sendBP_HTML(res, html, ...functionScripts) {
       .join(""),
     compHTML = bp.encode(allScripts + "\n\n" + html),
     unpacker = functionToIIFE(w_JSHTMLUnpack, `'${compHTML.encodedString}'`),
-    dom = makeDocument(`<script>${BP_HOOKIN(unpacker1)}</script>` + allScripts);
+    dom = makeDocument(`<script>${BP_HOOKIN(unpacker)}</script>` + allScripts);
 
   return res.send(dom.serialize());
 }
