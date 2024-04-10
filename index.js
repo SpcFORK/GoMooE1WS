@@ -1,7 +1,7 @@
 const { bpws } = require("./bpws/index");
 const express = require("express");
 
-const Frontend = import("./front/index.mjs");
+const Frontend = import("./front/Entry.mjs");
 
 const app = express();
 
@@ -32,6 +32,9 @@ app.get("/", (req, res) => {
     bpws.sendBP_HTML(res, "Testing, testing, 123", ...sarr);
   });
 });
+
+app.use(express.static("front"));
+app.use(express.static("./bpws/bp-gm1/w"));
 
 app.listen(3000, () => {
   console.log("Server started on port 3000");
