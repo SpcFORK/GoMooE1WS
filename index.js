@@ -3,8 +3,16 @@ const express = require("express");
 
 const app = express();
 
+function Main() {
+  console.log(1)
+}
+
 app.get("/", (req, res) => {
-  bpws.sendBP_HTML(res, "Testing, testing, 123");
+  const scripts = [
+    Main
+  ]
+  
+  bpws.sendBP_HTML(res, "Testing, testing, 123", ...scripts);
 });
 
 app.listen(3000, () => {
