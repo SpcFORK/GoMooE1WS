@@ -28,15 +28,15 @@ const codeToIIFE = (code = "{}", _ = "") => functionToIIFE("_ => " + code, _);
 // @Web
 
 function w_JSHTMLUnpack(encodedHTML) {
-  const b = document.body,
-    e = document.createElement("div"),
-    str = GoMooE1.decode(encodedHTML).decodedString;
+  const dobj = GoMooE1.decode(encodedHTML),
+    str = dobj.decodedString;
 
-  e.innerHTML = str;
-  console.log(str);
-  window.w_JSHTMLUnpack = e;
+  window.packedHTML = encodedHTML;
 
-  console.log(e);
+  addEventListener("DOMContentLoaded", () => {
+    document.body.innerHTML = str;
+    console.log("w_JSHTMLUnpack", e, str);
+  });
 }
 
 // ---
