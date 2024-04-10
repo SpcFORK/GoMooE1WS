@@ -31,11 +31,13 @@ function w_JSHTMLUnpack(encodedHTML) {
   const dobj = GoMooE1.decode(encodedHTML),
     str = dobj.decodedString;
 
-  window.packedHTML = encodedHTML;
+  window.GM1Client = {
+    decodedObject: dobj,
+    decodedString: str,
+  };
 
   addEventListener("DOMContentLoaded", () => {
     document.body.innerHTML = str;
-    console.log("w_JSHTMLUnpack", e, str);
   });
 }
 
