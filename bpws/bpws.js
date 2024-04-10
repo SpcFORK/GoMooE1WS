@@ -21,19 +21,21 @@ ${_ + ""}
 
 const functionToIIFE = (code, _ = "") => `(${code})(${_});`;
 const codeToIIFE = (code = "{}", _ = "") => functionToIIFE("_ => " + code, _);
-const moduleToIIFE = (module, _) => {
-  const m = module.exports;
-
-  if (typeof m === "function") {
-    return codeToIIFE(m, _);
+const moduleToIIFE = (m, _) => {
+  if (m?.then) {
+    return m.then((nm) => moduleToIIFE(nm, _));
   }
   //
-  else if (typeof m === "object" && typeof m.default === "function") {
-    return codeToIIFE(m.default, _);
+  else if (typeof m === "function") {
+    return functionToIIFE(m, _);
   }
   //
-  else if (typeof m.WebEntry === "function") {
-    return codeToIIFE(m.WebEntry, _);
+  else if (typeof m === "object" && typeof m?.default === "function") {
+    return functionToIIFE(m.default, _);
+  }
+  //
+  else if (typeof m?.WebEntry === "function") {
+    return functionToIIFE(m.WebEntry, _);
   }
   //
   else throw new Error("Unknown module type");
@@ -67,10 +69,13 @@ function makeDocument(head = "", body = "") {
 function sendBP_HTML(res, html, ...functionScripts) {
   const compHTML = bp.encode(html),
     unpacker = functionToIIFE(w_JSHTMLUnpack, `'${compHTML.encodedString}'`),
-    dom = makeDocument(`<script>${BP_HOOKIN(unpacker)}</script>` + allScripts),
     allScripts = functionScripts
-      .map((s) => `\n<script>${functionToIIFE(s)}</script>`)
-      .join("");
+      .map(
+        (s) =>
+          `\n<script>${typeof s === "string" ? s : functionToIIFE(s)}</script>`,
+      )
+      .join(""),
+    dom = makeDocument(`<script>${BP_HOOKIN(unpacker)}</script>` + allScripts);
 
   return res.send(dom.serialize());
 }
@@ -78,7 +83,6 @@ function sendBP_HTML(res, html, ...functionScripts) {
 // ---
 
 module.exports = {
-  bp,
   BP_HOOKIN,
 
   BP_SRC,
@@ -90,4 +94,6 @@ module.exports = {
   functionToIIFE,
   codeToIIFE,
   moduleToIIFE,
+
+  bp,
 };
