@@ -66,6 +66,22 @@ function BP_appendComment(container, text) {
   return container.appendChild(document.createComment(text));
 }
 
+function w_headProcessCleanup(name) {
+  const scriptTag = document.querySelector("script[id=BPWS-SRC]");
+
+  if (scriptTag)
+    scriptTag.replaceWith(document.createComment(" BPWS_SOURCECODE_HIDDEN "));
+
+  function deleteUneededTags(container) {
+    container.innerHTML = container.innerHTML.replace(
+      /(START OF (BP([^-]+){2})([^]+)END OF \2)/g,
+      "BPWS_DEPACKED ",
+    );
+  }
+
+  [document.body, document.head].map(deleteUneededTags);
+}
+
 // @Core
 function w_JSHTMLUnpack(encodedHTML) {
   const dobj = GoMooE1.decode(encodedHTML),
@@ -83,17 +99,13 @@ function w_JSHTMLUnpack(encodedHTML) {
   });
 }
 
-function w_makeResults(results = {}) {
-  const res = new Object(results);
-
-  delete res.uriString;
-
+function w_makeResults(results) {
   window.GM1Client = {
     serverToPeer: results,
   };
 }
 
-function runScriptTagInvoker() {
+function w_runScriptTagInvoker() {
   const scriptTags = document.querySelectorAll("script");
 
   const cBlockName = "BPWS_INVOKER_LOAD";
@@ -115,14 +127,6 @@ function runScriptTagInvoker() {
   }
 
   BP_appendComment(document.head, `END OF ${cBlockName}`);
-}
-
-function headProcessCleanup() {
-  const scriptTag = document.querySelector("script[id=BPWSOAKSRC]");
-  
-  if (scriptTag) scriptTag.replaceWith(
-    document.createComment(" BPWS_OAK_SOURCECODE_HIDDEN ")
-  );
 }
 
 // ---
@@ -147,7 +151,7 @@ function packScriptTagInvoker(...scripts) {
   const encodedScripts = bp.base64.encode(scriptTags);
 
   function unpackSI(scripts) {
-    const encodedScripts = atob(scripts);
+    const encodedScripts = base64.decode(scripts);
 
     const doc = new DOMParser().parseFromString(encodedScripts, "text/html");
     const vHead = doc.querySelector("head");
@@ -176,10 +180,14 @@ function packScriptTagInvoker(...scripts) {
   );
 }
 
-function sendBP_HTML(res, html, ...functionScripts) {
+function sendBP_HTML(res, head, html, ...functionScripts) {
   const allScripts = packScriptTagInvoker(...functionScripts),
     compHTML = bp.encode(allScripts + "\n\n" + html),
     unpacker = functionToIIFE(w_JSHTMLUnpack, `'${compHTML.encodedString}'`);
+
+  const safeCompResult = Object.assign({}, compHTML);
+
+  delete safeCompResult.uriString;
 
   // ---
   // @ Pass the UnpackerArchive to the client
@@ -195,9 +203,8 @@ function sendBP_HTML(res, html, ...functionScripts) {
   const htmlUnpacker = makeCommentBlock(
     "BPWS_HTML_UNPACKER",
     [
-      `<script>${functionToIIFE(w_makeResults, JSON.stringify(compHTML))}</script>`,
-      `<script id="BPWSOAKSRC">${BP_HOOKIN(unpacker)}</script>`,
-      `<script>${functionToIIFE(headProcessCleanup)}</script>`
+      `<script>${functionToIIFE(w_makeResults, JSON.stringify(safeCompResult))}</script>`,
+      `<script>${BP_HOOKIN(unpacker)}</script>`,
     ].join("\n"),
   );
 
@@ -205,8 +212,10 @@ function sendBP_HTML(res, html, ...functionScripts) {
     "BPWS_SCRIPT_LOADER",
     [
       `<script>`,
-      runScriptTagInvoker,
-      `addEventListener('DOMContentLoaded', runScriptTagInvoker)`,
+      w_runScriptTagInvoker,
+      w_headProcessCleanup,
+      `addEventListener('DOMContentLoaded', w_runScriptTagInvoker)`,
+      `addEventListener('DOMContentLoaded', w_headProcessCleanup)`,
       `</script>`,
     ].join("\n"),
   );
@@ -215,7 +224,9 @@ function sendBP_HTML(res, html, ...functionScripts) {
 
   const scriptRoot = makeCommentBlock("BP_UNPACKER_ARCHIVE", builtSMpl, true);
 
-  const dom = makeDocument(scriptRoot);
+  const dom = makeDocument(head, scriptRoot);
+
+  // ---
 
   return [res.send(dom.serialize()), compHTML, (dom.window.close(), true)];
 }
